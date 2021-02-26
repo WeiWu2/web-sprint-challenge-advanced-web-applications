@@ -1,36 +1,64 @@
-import React, { useEffect } from "react";
+import React, {useState } from "react";
 import axios from "axios";
+import {useHistory} from 'react-router-dom'
 
 const Login = () => {
-  // make a post request to retrieve a token from the api
-  // when you have handled the token, navigate to the BubblePage route
+  
+  const {push} = useHistory();
+  // form state
+  const [credentials, setCredentials] = useState({
+    username:'',
+    password:'',
+    error:''
+  })
+  const handleChange = (e) => {
+    // updates form state
+    setCredentials({
+      ...credentials,
+    [e.target.name]:e.target.value,
+    error:''
+  })
 
-  useEffect(()=>{
-    axios
-      .delete(`http://localhost:5000/api/colors/1`, {
-        headers:{
-          'authorization': "ahuBHejkJJiMDhmODZhZi0zaeLTQ4ZfeaseOGZgesai1jZWYgrTA07i73Gebhu98"
-        }
-      })
-      .then(res=>{
-        axios.get(`http://localhost:5000/api/colors`, {
-          headers:{
-            'authorization': ""
-          }
+  }
+  const handleLogin = (e) => {
+    e.preventDefault();
+    // checks if username or password is empty, sets error if they are
+    if(credentials.username === '' || credentials.password === '')
+      return setCredentials({...credentials, error: 'Username or Password not valid.'})
+
+    else 
+    // post request with username and password, sets token to localStorage if successful, sets error otherwise
+      {
+        axios.post('http://localhost:5000/api/login', credentials)
+        .then((res) => {
+          localStorage.setItem('token', res.data.payload)
+          push('/bubble')
+
         })
-        .then(res=> {
-          console.log(res);
-        });
-        console.log(res);
-      })
-  });
-
+        .catch((err) => {
+          setCredentials({...credentials, error:err.response.data.error})
+        })
+      }
+  }
   return (
     <>
       <h1>
         Welcome to the Bubble App!
-        <p>Build a login page here</p>
       </h1>
+      <div>
+      <form onSubmit={handleLogin}>
+        <div>
+          <label>Username</label>
+          <input value={credentials.username} type='text' name='username' onChange={handleChange}></input>
+          </div>
+          <div>
+          <label>Password</label>
+          <input value={credentials.password} type='password' name='password' onChange={handleChange}></input>
+          </div>
+          <p>{credentials.error}</p> 
+          <button>Login</button>
+      </form>
+      </div>
     </>
   );
 };
